@@ -252,6 +252,25 @@ the previous compression algorithm.
 > The `gzip` and `estargz` compression methods use the [`compress/gzip` package](https://pkg.go.dev/compress/gzip),
 > while `zstd` uses the [`github.com/klauspost/compress/zstd` package](https://github.com/klauspost/compress/tree/master/zstd).
 
+#### Zstd compression levels
+
+When you specify `compression=zstd`, the `compression-level` parameter accepts values from 0 to 22. However, BuildKit maps these values to only four internal compression levels provided by the klauspost/compress/zstd library. This means that multiple `compression-level` values result in the same actual compression behavior.
+
+The following table shows how `compression-level` values map to the internal compression levels:
+
+| compression-level | Internal level | Approximate zstd level | Description                           |
+| ----------------- | -------------- | ---------------------- | ------------------------------------- |
+| 0-2               | Fastest        | ~1                     | Fastest compression, larger file size |
+| 3-6 (default)     | Default        | ~3                     | Balanced compression and speed        |
+| 7-8               | Better         | ~7                     | Better compression, slower            |
+| 9-22              | Best           | ~11                    | Best compression, slowest             |
+
+For example, setting `compression-level=5` and `compression-level=6` produces the same compression output, since both map to the "Default" internal level.
+
+#### Zstd chunked compression
+
+While BuildKit supports the `compression=zstd:chunked` option, it doesn't currently implement the chunked optimization features available in other container tools. Specifying `zstd:chunked` applies standard zstd compression without the specialized chunking that enables faster image pulls in tools like Podman.
+
 ### OCI media types
 
 The `image`, `registry`, `oci` and `docker` exporters create container images.
